@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { fetchRainViewerLayer } from '@services/rainviewer/indexService';
+import { fetchRainViewerLayer, type RainViewerLayers } from '@services/rainviewer/indexService';
 import { useSettingsStore } from '@stores/useSettingsStore';
 import { useNetworkStatus } from '@shared/hooks/useNetworkStatus';
 import { AppText, BrandHeader, Card } from '@shared/ui/components';
@@ -36,17 +36,24 @@ try {
  * secretos. Es una VISTA CONTEXTUAL: no alimenta la decisión (eso sale del
  * paso "Ambiente" con Open-Meteo).
  */
-function buildLeafletHtml(lat: number, lon: number, radarUrl: string | null): string {
-  const radarLayer = radarUrl
-    ? `L.tileLayer('${radarUrl}', { opacity: 0.6, maxNativeZoom: 7 }).addTo(map);`
-    : '';
+function buildLeafletHtml(
+  lat: number,
+  lon: number,
+  radarUrl: string | null,
+  satelliteUrl: string | null,
+): string {
   return `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>html,body,#map{height:100%;margin:0;padding:0;background:#F5F5F3}</style>
+<style>
+  html,body,#map{height:100%;margin:0;padding:0;background:#F5F5F3}
+  .leaflet-control-layers{border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,0.15);border:none}
+  .leaflet-control-layers-toggle{width:40px;height:40px;background-size:22px 22px}
+  .leaflet-bar a{color:#1B6B3A}
+</style>
 </head>
 <body>
 <div id="map"></div>
@@ -56,7 +63,15 @@ function buildLeafletHtml(lat: number, lon: number, radarUrl: string | null): st
   L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '© OpenStreetMap'
   }).addTo(map);
-  ${radarLayer}
+
+  var overlays = {};
+  ${satelliteUrl ? `var sat = L.tileLayer('${satelliteUrl}', { opacity: 0.5, maxNativeZoom: 7 }).addTo(map); overlays['Nubes (satélite)'] = sat;` : ''}
+  ${radarUrl ? `var radar = L.tileLayer('${radarUrl}', { opacity: 0.6, maxNativeZoom: 7 }).addTo(map); overlays['Radar de lluvia'] = radar;` : ''}
+
+  if (Object.keys(overlays).length > 0) {
+    L.control.layers(null, overlays, { collapsed: true, position: 'topright' }).addTo(map);
+  }
+
   L.circleMarker([${lat}, ${lon}], {
     radius: 9, color: '#1B6B3A', weight: 3, fillColor: '#1B6B3A', fillOpacity: 0.85
   }).addTo(map).bindPopup('Lote Llanogrande (8 ha)');
@@ -65,17 +80,25 @@ function buildLeafletHtml(lat: number, lon: number, radarUrl: string | null): st
 </html>`;
 }
 
+function leyendaCapas(layers: RainViewerLayers | null): string {
+  const partes: string[] = [];
+  if (layers?.satelliteUrl) partes.push('nubes');
+  if (layers?.radarUrl) partes.push('radar de lluvia');
+  if (partes.length === 0) return 'OpenStreetMap · sin capas de clima ahora';
+  return `OpenStreetMap + ${partes.join(' + ')} (RainViewer)`;
+}
+
 export function ClimateMapScreen() {
   const coords = useSettingsStore((s) => s.loteCoords);
   const loteNombre = useSettingsStore((s) => s.loteNombre);
   const { online } = useNetworkStatus();
-  const [radarUrl, setRadarUrl] = useState<string | null>(null);
+  const [layers, setLayers] = useState<RainViewerLayers | null>(null);
   const [ready, setReady] = useState(false);
 
   const cargar = useCallback(() => {
     setReady(false);
     fetchRainViewerLayer()
-      .then((l) => setRadarUrl(l?.urlTemplate ?? null))
+      .then((l) => setLayers(l))
       .finally(() => setReady(true));
   }, []);
 
@@ -121,7 +144,7 @@ export function ClimateMapScreen() {
         <View style={styles.flex}>
           <WebViewComp
             originWhitelist={['*']}
-            source={{ html: buildLeafletHtml(coords.lat, coords.lon, radarUrl) }}
+            source={{ html: buildLeafletHtml(coords.lat, coords.lon, layers?.radarUrl ?? null, layers?.satelliteUrl ?? null) }}
             style={styles.flex}
             javaScriptEnabled
             domStorageEnabled
@@ -129,11 +152,9 @@ export function ClimateMapScreen() {
           />
           <Card style={styles.legend} elevation="md">
             <View style={styles.legendRow}>
-              <Ionicons name="rainy" size={16} color={colors.brand.primary} />
+              <Ionicons name="layers" size={16} color={colors.brand.primary} />
               <AppText variant="caption" color={colors.textSecondary}>
-                {radarUrl
-                  ? 'Radar de precipitación (RainViewer) · base OpenStreetMap'
-                  : 'OpenStreetMap · radar no disponible ahora'}
+                {leyendaCapas(layers)} · ícono de capas (arriba a la derecha) para mostrar/ocultar
               </AppText>
             </View>
           </Card>

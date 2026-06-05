@@ -3,38 +3,51 @@ import { getJson } from '@services/http';
 import { RAINVIEWER_INDEX, TIMEOUTS } from '@shared/config/env';
 
 /**
- * RainViewer: el índice `weather-maps.json` da el host y los frames de radar.
- * Los `path` CADUCAN (~10 min) → hay que refrescar el índice periódicamente y
- * actualizar la `key` del <UrlTile>. `maximumZ` es ~7 (no hay tiles a escala
- * de parcela). Si el índice falla, se oculta la capa (mapa base permanece).
+ * RainViewer: el índice `weather-maps.json` da el host y los frames de radar
+ * (precipitación) y de satélite (nubes, infrarrojo). Los `path` CADUCAN
+ * (~10 min) → conviene refrescar. `maximumZ` ~7 (no hay tiles a escala de
+ * parcela). El radar tiene cobertura limitada en Colombia; el satélite tiene
+ * cobertura casi global y se ve de forma confiable sobre la zona.
  */
 interface RainViewerDTO {
   host: string;
   radar?: { past?: { time: number; path: string }[]; nowcast?: { time: number; path: string }[] };
+  satellite?: { infrared?: { time: number; path: string }[] };
 }
 
-export interface RainViewerLayer {
-  /** Plantilla de URL lista para <UrlTile urlTemplate=...>. */
-  urlTemplate: string;
-  /** Identificador del frame (para forzar remount del tile al cambiar). */
+export interface RainViewerLayers {
+  /** Tiles de precipitación (lluvia). Null si no hay frames. */
+  radarUrl: string | null;
+  /** Tiles de nubes/satélite infrarrojo. Null si no hay frames. */
+  satelliteUrl: string | null;
+  /** Identificador del frame más reciente (para refrescar). */
   frameKey: string;
-  maximumZ: number;
 }
 
-export async function fetchRainViewerLayer(): Promise<RainViewerLayer | null> {
+function ultimo(frames?: { time: number; path: string }[]): { time: number; path: string } | undefined {
+  return frames && frames.length ? frames[frames.length - 1] : undefined;
+}
+
+export async function fetchRainViewerLayer(): Promise<RainViewerLayers | null> {
   const r = await getJson<RainViewerDTO>(RAINVIEWER_INDEX, { timeoutMs: TIMEOUTS.rainviewer, retries: 1 });
   if (!isOk(r)) return null;
 
-  const { host, radar } = r.value;
-  const frames = [...(radar?.past ?? []), ...(radar?.nowcast ?? [])];
-  const ultimo = frames[frames.length - 1];
-  if (!host || !ultimo) return null;
+  const { host, radar, satellite } = r.value;
+  if (!host) return null;
 
-  // {host}{path}/{size}/{z}/{x}/{y}/{color}/{options}.png
-  // size=256, color=2 (Universal Blue), options=1_1 (smooth + snow)
+  const radarFrame = ultimo([...(radar?.past ?? []), ...(radar?.nowcast ?? [])]);
+  const satFrame = ultimo(satellite?.infrared);
+
+  // Patrón de tiles: {host}{path}/{size}/{z}/{x}/{y}/{color}/{options}.png
+  const radarUrl = radarFrame ? `${host}${radarFrame.path}/256/{z}/{x}/{y}/2/1_1.png` : null;
+  // Satélite infrarrojo: color 0, opciones 0_0.
+  const satelliteUrl = satFrame ? `${host}${satFrame.path}/256/{z}/{x}/{y}/0/0_0.png` : null;
+
+  if (!radarUrl && !satelliteUrl) return null;
+
   return {
-    urlTemplate: `${host}${ultimo.path}/256/{z}/{x}/{y}/2/1_1.png`,
-    frameKey: String(ultimo.time),
-    maximumZ: 7,
+    radarUrl,
+    satelliteUrl,
+    frameKey: String(radarFrame?.time ?? satFrame?.time ?? ''),
   };
 }
