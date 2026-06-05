@@ -1,0 +1,50 @@
+{
+  "name": "agrosmart",
+  "version": "1.0.0",
+  "description": "AgroSmart — DSS móvil para preparación de mezclas y evaluación de riesgo ambiental en fumigación con dron (cultivo de arroz, Campoalegre-Huila). React Native + Expo + TypeScript, sin backend.",
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "prebuild": "expo prebuild",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "private": true,
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
+  },
+  "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@react-native-community/netinfo": "12.0.1",
+    "eslint": "^9.39.4",
+    "eslint-config-expo": "~56.0.4",
+    "expo": "^56.0.8",
+    "expo-constants": "~56.0.16",
+    "expo-crypto": "~56.0.4",
+    "expo-dev-client": "~56.0.18",
+    "expo-file-system": "~56.0.7",
+    "expo-font": "~56.0.5",
+    "expo-linking": "~56.0.13",
+    "expo-print": "~56.0.3",
+    "expo-router": "~56.2.8",
+    "expo-sharing": "~56.0.15",
+    "expo-sqlite": "~56.0.4",
+    "expo-status-bar": "~56.0.4",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-maps": "1.27.2",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "4.25.2",
+    "react-native-web": "^0.21.2",
+    "zustand": "^5.0.14"
+  }
+}
