@@ -8,8 +8,8 @@ import { useProfileStore } from '@stores/useProfileStore';
 import { useSettingsStore } from '@stores/useSettingsStore';
 import { useSessionDraftStore } from '@stores/useSessionDraftStore';
 import { useCan } from '@shared/rbac/useCan';
-import { AppText, Button, Card, Screen, SemaphoreBadge } from '@shared/ui/components';
-import { colors, spacing } from '@shared/ui/theme';
+import { AppText, BrandHeader, Button, Card, Screen, SemaphoreBadge } from '@shared/ui/components';
+import { colors, radius, spacing } from '@shared/ui/theme';
 
 const ROL_LABEL = { agricultor: 'Agricultor', supervisor: 'Supervisor', operador: 'Operador' } as const;
 
@@ -35,7 +35,7 @@ export function SessionHomeScreen() {
 
   return (
     <Screen
-      topInset
+      header={<BrandHeader title="AgroSmart" subtitle={`${rol ? ROL_LABEL[rol] : ''} · ${loteNombre}`} />}
       footer={
         puedeCrear ? (
           <Button label="Nueva fumigación" icon="add-circle" onPress={iniciar} />
@@ -46,31 +46,39 @@ export function SessionHomeScreen() {
         )
       }
     >
-      <View style={styles.header}>
-        <View>
-          <AppText variant="display">AgroSmart</AppText>
-          <AppText variant="body" color={colors.textSecondary}>
-            {rol ? ROL_LABEL[rol] : ''} · {loteNombre}
+      <Card elevation="md" style={styles.infoCard}>
+        <View style={styles.infoHead}>
+          <View style={styles.infoIcon}>
+            <Ionicons name="shield-checkmark" size={22} color={colors.brand.primary} />
+          </View>
+          <AppText variant="subtitle" style={styles.flex}>
+            Antes de fumigar
           </AppText>
         </View>
-        <Ionicons name="leaf" size={32} color={colors.brand.primary} />
-      </View>
-
-      <Card style={styles.infoCard}>
-        <AppText variant="subtitle">Antes de fumigar</AppText>
         <AppText variant="body" color={colors.textSecondary}>
           AgroSmart calcula la mezcla, valida la concentración y carga química, y evalúa las
           condiciones ambientales. Tú tomas la decisión final.
         </AppText>
+        <View style={styles.pasos}>
+          {['Datos', 'Mezcla', 'Validación', 'Ambiente', 'Decisión'].map((p, i) => (
+            <View key={p} style={styles.pasoChip}>
+              <AppText variant="caption" color={colors.brand.primary}>
+                {i + 1}. {p}
+              </AppText>
+            </View>
+          ))}
+        </View>
       </Card>
 
       <AppText variant="subtitle" style={styles.section}>
         Últimas sesiones
       </AppText>
       {ultimas.length === 0 ? (
-        <AppText variant="body" color={colors.textSecondary}>
-          Aún no hay fumigaciones registradas.
-        </AppText>
+        <Card tone="alt" elevation="none">
+          <AppText variant="body" color={colors.textSecondary}>
+            Aún no hay fumigaciones registradas. Toca “Nueva fumigación” para empezar.
+          </AppText>
+        </Card>
       ) : (
         <View style={styles.lista}>
           {ultimas.map((b) => (
@@ -96,8 +104,24 @@ function formatFecha(iso: string): string {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  infoCard: { marginTop: spacing.lg, gap: spacing.xs },
+  flex: { flex: 1 },
+  infoCard: { gap: spacing.sm },
+  infoHead: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  infoIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.md,
+    backgroundColor: colors.brand.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pasos: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginTop: spacing.xs },
+  pasoChip: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+  },
   section: { marginTop: spacing.lg, marginBottom: spacing.sm },
   lista: { gap: spacing.sm },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },

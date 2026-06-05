@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { Rol } from '@core/models';
 import { useProfileStore } from '@stores/useProfileStore';
 import { AppText } from '@shared/ui/components';
-import { colors, radius, sizes, spacing } from '@shared/ui/theme';
+import { colors, radius, shadows, sizes, spacing } from '@shared/ui/theme';
 
 interface OpcionRol {
   rol: Rol;
@@ -98,6 +98,7 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: spacing.md,
     minHeight: 72,
+    ...shadows.sm,
   },
   pressed: { opacity: 0.85 },
   iconWrap: {

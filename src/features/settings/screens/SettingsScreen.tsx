@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useProfileStore } from '@stores/useProfileStore';
 import { useSettingsStore } from '@stores/useSettingsStore';
 import { useCan } from '@shared/rbac/useCan';
-import { AppText, Button, Card, NumberField, Screen } from '@shared/ui/components';
+import { AppText, BrandHeader, Button, Card, NumberField, Screen } from '@shared/ui/components';
 import { colors, spacing } from '@shared/ui/theme';
 
 const ROL_LABEL = { agricultor: 'Agricultor', supervisor: 'Supervisor', operador: 'Operador' } as const;
@@ -23,9 +23,7 @@ export function SettingsScreen() {
   };
 
   return (
-    <Screen topInset>
-      <AppText variant="display">Ajustes</AppText>
-
+    <Screen header={<BrandHeader title="Ajustes" subtitle="Perfil, lote y equipo" />}>
       <Card style={styles.card}>
         <View style={styles.row}>
           <Ionicons name="person-circle" size={28} color={colors.brand.primary} />

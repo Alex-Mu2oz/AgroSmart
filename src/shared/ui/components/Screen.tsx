@@ -6,23 +6,33 @@ import { colors, spacing } from '@shared/ui/theme';
 interface ScreenProps {
   children: ReactNode;
   scroll?: boolean;
-  /** Aplica el inset superior (para pantallas sin header de navegación). */
+  /** Aplica el inset superior (para pantallas sin header de navegación ni BrandHeader). */
   topInset?: boolean;
   contentStyle?: ViewStyle;
   footer?: ReactNode;
+  /** Encabezado a ancho completo (p. ej. BrandHeader), fuera del padding del contenido. */
+  header?: ReactNode;
 }
 
-/** Contenedor de pantalla: SafeArea + padding consistente + scroll opcional. */
-export function Screen({ children, scroll = true, topInset = false, contentStyle, footer }: ScreenProps) {
+/** Contenedor de pantalla: SafeArea + padding consistente + scroll opcional + header opcional. */
+export function Screen({
+  children,
+  scroll = true,
+  topInset = false,
+  contentStyle,
+  footer,
+  header,
+}: ScreenProps) {
   const insets = useSafeAreaInsets();
   const padding: ViewStyle = {
     padding: spacing.lg,
-    paddingTop: topInset ? insets.top + spacing.md : spacing.lg,
+    paddingTop: header ? spacing.lg : topInset ? insets.top + spacing.md : spacing.lg,
     paddingBottom: spacing.xxl,
   };
 
   return (
     <View style={styles.screen}>
+      {header}
       {scroll ? (
         <ScrollView contentContainerStyle={[padding, contentStyle]} keyboardShouldPersistTaps="handled">
           {children}

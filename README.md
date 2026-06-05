@@ -58,7 +58,8 @@ El flujo de una fumigación es un **asistente de 5 pasos** (≤ 5 minutos):
 
 - **React Native + Expo (SDK 56) + TypeScript** — app móvil, **sin servidor**.
 - **expo-router** (navegación) · **Zustand** (estado) · **expo-sqlite** (datos locales).
-- **Open-Meteo** (clima, gratis y **sin API key**) · **react-native-maps + RainViewer** (mapa).
+- **Open-Meteo** (clima, gratis y **sin API key**) · mapa con **Leaflet + OpenStreetMap + radar
+  RainViewer** dentro de un WebView (**sin API key**, sin Google Cloud).
 - Arquitectura limpia en **3 capas** con organización por *features*:
 
 ```
@@ -93,8 +94,8 @@ Para **correr la app en un teléfono/emulador** necesitas **una** de estas dos o
 - **Opción B (nube, sin instalar Android SDK):** una cuenta gratuita de [Expo](https://expo.dev) para
   compilar con **EAS Build** (`npm i -g eas-cli`).
 
-> ⚠️ **AgroSmart NO funciona en la app Expo Go**, porque usa `react-native-maps` (módulo nativo).
-> **Hay que generar un *development build*** (los pasos están más abajo).
+> ⚠️ AgroSmart se ejecuta con un **development build** (no con la app Expo Go genérica): usa módulos
+> nativos (expo-sqlite, react-native-webview) y va sobre un SDK reciente. Los pasos están más abajo.
 
 ---
 

@@ -35,17 +35,7 @@ const config: ExpoConfig = {
   },
   // Sin target web en el piloto: la app es Android. (Evita el bundling web de
   // expo-sqlite, que requiere assets wasm que no usamos.)
-  plugins: [
-    'expo-router',
-    'expo-sqlite',
-    'expo-font',
-    [
-      'react-native-maps',
-      {
-        // Provider por defecto (OSM/nativo). Sin Google Maps API key → sin secretos.
-      },
-    ],
-  ],
+  plugins: ['expo-router', 'expo-sqlite', 'expo-font'],
   experiments: {
     typedRoutes: true,
   },

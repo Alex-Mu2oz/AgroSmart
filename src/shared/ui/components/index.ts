@@ -1,5 +1,6 @@
 export { AppText } from '@shared/ui/components/AppText';
 export { Screen } from '@shared/ui/components/Screen';
+export { BrandHeader } from '@shared/ui/components/BrandHeader';
 export { Button } from '@shared/ui/components/Button';
 export type { ButtonVariant } from '@shared/ui/components/Button';
 export { Card } from '@shared/ui/components/Card';

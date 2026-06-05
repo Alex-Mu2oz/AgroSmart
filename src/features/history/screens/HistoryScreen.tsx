@@ -6,7 +6,7 @@ import type { Bitacora, TipoDecision } from '@core/models';
 import { computeKpis, type Kpis } from '@core/calc/kpis';
 import { logbookRepo, type FiltroHistorial } from '@data/repos/logbookRepo';
 import { useCan } from '@shared/rbac/useCan';
-import { AppText, Card, EmptyState, Screen, SemaphoreBadge } from '@shared/ui/components';
+import { AppText, BrandHeader, Card, EmptyState, Screen, SemaphoreBadge } from '@shared/ui/components';
 import { colors, radius, spacing } from '@shared/ui/theme';
 
 const FILTROS: { key: TipoDecision | 'todas'; label: string }[] = [
@@ -34,9 +34,7 @@ export function HistoryScreen() {
   useFocusEffect(useCallback(() => cargar(), [cargar]));
 
   return (
-    <Screen topInset>
-      <AppText variant="display">Historial</AppText>
-
+    <Screen header={<BrandHeader title="Historial" subtitle="Bitácora de fumigaciones" />}>
       {verKpis && kpis ? <KpisCard kpis={kpis} /> : null}
 
       <View style={styles.filtros}>
