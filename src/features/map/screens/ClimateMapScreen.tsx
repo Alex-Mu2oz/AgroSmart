@@ -1,12 +1,33 @@
+import type { ComponentType } from 'react';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchRainViewerLayer } from '@services/rainviewer/indexService';
 import { useSettingsStore } from '@stores/useSettingsStore';
 import { useNetworkStatus } from '@shared/hooks/useNetworkStatus';
 import { AppText, BrandHeader, Card } from '@shared/ui/components';
 import { colors, radius, spacing } from '@shared/ui/theme';
+
+/**
+ * Carga segura de react-native-webview. En un APK que aún no lo incluye (build
+ * viejo), `require` lanza al buscar el módulo nativo `RNCWebViewModule`; lo
+ * capturamos para NO romper el arranque de la app. En el build correcto,
+ * `WebViewComp` es el componente real.
+ */
+let WebViewComp: ComponentType<{
+  originWhitelist?: string[];
+  source: { html: string };
+  style?: unknown;
+  javaScriptEnabled?: boolean;
+  domStorageEnabled?: boolean;
+  startInLoadingState?: boolean;
+}> | null = null;
+try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  WebViewComp = require('react-native-webview').WebView;
+} catch {
+  WebViewComp = null;
+}
 
 /**
  * Mapa climático SIN clave: Leaflet + OpenStreetMap (base) + radar de
@@ -68,7 +89,18 @@ export function ClimateMapScreen() {
     <View style={styles.screen}>
       <BrandHeader title="Mapa clima" subtitle={loteNombre} />
 
-      {!online ? (
+      {!WebViewComp ? (
+        <View style={styles.center}>
+          <Ionicons name="cloud-download" size={44} color={colors.brand.primary} />
+          <AppText variant="subtitle" center>
+            Mapa disponible tras actualizar la app
+          </AppText>
+          <AppText variant="body" center color={colors.textSecondary}>
+            Esta versión instalada no incluye el componente de mapa. Instala el último build de la app
+            para ver OpenStreetMap y el radar de lluvia. El resto de la app funciona normalmente.
+          </AppText>
+        </View>
+      ) : !online ? (
         <View style={styles.center}>
           <Ionicons name="cloud-offline" size={44} color={colors.textSecondary} />
           <AppText variant="subtitle" center>
@@ -87,7 +119,7 @@ export function ClimateMapScreen() {
         </View>
       ) : (
         <View style={styles.flex}>
-          <WebView
+          <WebViewComp
             originWhitelist={['*']}
             source={{ html: buildLeafletHtml(coords.lat, coords.lon, radarUrl) }}
             style={styles.flex}
