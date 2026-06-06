@@ -13,6 +13,7 @@ const config: ExpoConfig = {
   version: '1.0.0',
   orientation: 'portrait',
   scheme: 'agrosmart',
+  platforms: ['android', 'ios', 'web'],
   userInterfaceStyle: 'light',
   icon: './assets/images/icon.png',
   extra: {

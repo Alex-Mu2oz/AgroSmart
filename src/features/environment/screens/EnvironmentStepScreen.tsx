@@ -22,6 +22,7 @@ import {
   StepHeader,
 } from '@shared/ui/components';
 import { colors, radius, semaforoColores, semaforoLabel, spacing } from '@shared/ui/theme';
+import { formatHoraConDia as formatHora } from '@shared/utils/date';
 
 /** M4 — Integración ambiental (clima Open-Meteo + distancia a agua manual). */
 export function EnvironmentStepScreen() {
@@ -195,10 +196,6 @@ function formatValor(v: VariableAmbientalEvaluada): string {
   return `${Math.round(v.valor * 10) / 10} ${u[v.clave]}`;
 }
 
-function formatHora(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString('es-CO', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
-}
 
 const styles = StyleSheet.create({
   banner: { marginBottom: spacing.sm },

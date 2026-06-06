@@ -10,6 +10,7 @@ import { useSessionDraftStore } from '@stores/useSessionDraftStore';
 import { useCan } from '@shared/rbac/useCan';
 import { AppText, BrandHeader, Button, Card, Screen, SemaphoreBadge } from '@shared/ui/components';
 import { colors, radius, semaforoColores, spacing } from '@shared/ui/theme';
+import { formatFechaCorta as formatFecha } from '@shared/utils/date';
 
 const ROL_LABEL = { agricultor: 'Agricultor', supervisor: 'Supervisor', operador: 'Operador' } as const;
 
@@ -116,10 +117,6 @@ export function SessionHomeScreen() {
   );
 }
 
-function formatFecha(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-}
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },

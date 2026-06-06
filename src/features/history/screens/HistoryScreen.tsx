@@ -8,6 +8,7 @@ import { logbookRepo, type FiltroHistorial } from '@data/repos/logbookRepo';
 import { useCan } from '@shared/rbac/useCan';
 import { AppText, BrandHeader, Card, EmptyState, Screen, SemaphoreBadge } from '@shared/ui/components';
 import { colors, radius, semaforoColores, spacing } from '@shared/ui/theme';
+import { formatFechaLarga as formatFecha } from '@shared/utils/date';
 
 const FILTROS: { key: TipoDecision | 'todas'; label: string }[] = [
   { key: 'todas', label: 'Todas' },
@@ -136,15 +137,6 @@ function Kpi({ label, valor, icon }: KpiProps) {
   );
 }
 
-function formatFecha(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-CO', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
 
 const styles = StyleSheet.create({
   kpis: {

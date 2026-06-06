@@ -7,6 +7,7 @@ import { logbookRepo } from '@data/repos/logbookRepo';
 import { verificarChecksum } from '@services/crypto/checksum';
 import { AppText, Card, LoadingState, Screen, SemaphoreBadge } from '@shared/ui/components';
 import { colors, radius, spacing } from '@shared/ui/theme';
+import { formatFechaCompleta } from '@shared/utils/date';
 
 /** Detalle de una sesión de la bitácora (soporte de evidencia). */
 export function SessionDetailScreen() {
@@ -38,7 +39,7 @@ export function SessionDetailScreen() {
 
         {/* Sección General */}
         <Card style={styles.card} elevation="sm">
-          <Dato etiqueta="Fecha de cierre" valor={new Date(b.cerradaEn).toLocaleString('es-CO')} />
+          <Dato etiqueta="Fecha de cierre" valor={formatFechaCompleta(b.cerradaEn)} />
           <Dato etiqueta="Rol de registro" valor={b.rol.toUpperCase()} />
           <Dato etiqueta="Ubicación (Lote)" valor={`${b.geolocalizacion.lat.toFixed(4)}, ${b.geolocalizacion.lon.toFixed(4)}`} />
           {b.motivoOverride ? <Dato etiqueta="Motivo de Override" valor={b.motivoOverride} isLast={true} /> : null}

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Alert, Platform, StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import type { Bitacora, DecisionUsuario, PanelPrefumigacion } from '@core/models';
 import { construirPanel, resolverDecision, type ContextoCierre } from '@core/calc/decision';
@@ -45,6 +45,18 @@ export function DecisionStepScreen() {
     return construirPanel(draft.validacion, draft.ambiental, draft.mezcla);
   }, [draft.validacion, draft.ambiental, draft.mezcla]);
 
+  console.log('DIAGNOSTIC - DecisionStepScreen:', {
+    hasPanel: !!panel,
+    hasRol: !!rol,
+    rolValue: rol,
+    hasSesionId: !!draft.sesionId,
+    sesionIdValue: draft.sesionId,
+    hasCreadaEn: !!draft.creadaEn,
+    hasDraftValidacion: !!draft.validacion,
+    hasDraftAmbiental: !!draft.ambiental,
+    hasDraftMezcla: !!draft.mezcla,
+  });
+
   if (!panel || !rol || !draft.sesionId || !draft.creadaEn) {
     return <ErrorState mensaje="Faltan datos de la sesión. Vuelve a iniciar." onRetry={() => router.replace('/(tabs)')} />;
   }
@@ -60,41 +72,83 @@ export function DecisionStepScreen() {
   const persistir = async (decision: DecisionUsuario) => {
     const r = resolverDecision(panel, decision, { ...ctx, cerradaEn: new Date().toISOString() });
     if (!r.ok) {
-      Alert.alert('No se pudo registrar', mensajeErrorDecision(r.error));
+      if (Platform.OS === 'web') {
+        window.alert(`No se pudo registrar: ${mensajeErrorDecision(r.error)}`);
+      } else {
+        Alert.alert('No se pudo registrar', mensajeErrorDecision(r.error));
+      }
       return;
     }
     try {
       setGuardando(true);
       const sellada: Bitacora = await sellarBitacora(r.bitacora);
       await logbookRepo.insert(sellada);
-      reset();
-      Alert.alert('Sesión registrada', resumenDecision(r.tipoDecision), [
-        { text: 'Ver historial', onPress: () => router.replace('/(tabs)/history') },
-        { text: 'Inicio', onPress: () => router.replace('/(tabs)') },
-      ]);
+      
+      if (Platform.OS === 'web') {
+        const irAlHistorial = window.confirm(
+          `Sesión registrada: ${resumenDecision(r.tipoDecision)}\n\n¿Deseas ir al Historial para ver el registro?\n(Aceptar para ver Historial, Cancelar para ir al Inicio)`
+        );
+        reset();
+        if (irAlHistorial) {
+          router.replace('/(tabs)/history');
+        } else {
+          router.replace('/(tabs)');
+        }
+      } else {
+        Alert.alert('Sesión registrada', resumenDecision(r.tipoDecision), [
+          {
+            text: 'Ver historial',
+            onPress: () => {
+              reset();
+              router.replace('/(tabs)/history');
+            },
+          },
+          {
+            text: 'Inicio',
+            onPress: () => {
+              reset();
+              router.replace('/(tabs)');
+            },
+          },
+        ]);
+      }
     } catch {
-      Alert.alert('Error', 'No se pudo guardar la bitácora. Intenta de nuevo.');
+      if (Platform.OS === 'web') {
+        window.alert('Error: No se pudo guardar la bitácora. Intenta de nuevo.');
+      } else {
+        Alert.alert('Error', 'No se pudo guardar la bitácora. Intenta de nuevo.');
+      }
     } finally {
       setGuardando(false);
     }
   };
 
   const descartarYSalir = () => {
-    Alert.alert(
-      '¿Descartar sesión?',
-      'Se borrarán todos los datos ingresados en esta sesión y volverás al inicio sin registrar ningún historial.',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Descartar y salir',
-          style: 'destructive',
-          onPress: () => {
-            reset();
-            router.replace('/(tabs)');
+    if (Platform.OS === 'web') {
+      const ok = window.confirm(
+        '¿Descartar sesión?\n\nSe borrarán todos los datos ingresados en esta sesión y volverás al inicio sin registrar ningún historial.'
+      );
+      if (ok) {
+        reset();
+        router.replace('/(tabs)');
+      }
+    } else {
+      Alert.alert(
+        '¿Descartar sesión?',
+        'Se borrarán todos los datos ingresados en esta sesión y volverás al inicio sin registrar ningún historial.',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Descartar y salir',
+            style: 'destructive',
+            onPress: () => {
+              reset();
+              router.replace('/(tabs)');
+            },
           },
-        },
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const aplicar = () => persistir({ accion: 'aplicar' });

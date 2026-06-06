@@ -13,6 +13,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@core': resolve(__dirname, 'src/core'),
+      '@data': resolve(__dirname, 'src/data'),
+      '@services': resolve(__dirname, 'src/services'),
+      '@stores': resolve(__dirname, 'src/stores'),
+      '@shared': resolve(__dirname, 'src/shared'),
+      '@features': resolve(__dirname, 'src/features'),
     },
   },
   // El tsconfig.json del proyecto extiende `expo/tsconfig.base` (aún no
