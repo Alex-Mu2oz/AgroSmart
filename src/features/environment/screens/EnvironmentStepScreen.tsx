@@ -21,7 +21,7 @@ import {
   StaleDataBanner,
   StepHeader,
 } from '@shared/ui/components';
-import { colors, radius, spacing } from '@shared/ui/theme';
+import { colors, radius, semaforoColores, semaforoLabel, spacing } from '@shared/ui/theme';
 
 /** M4 — Integración ambiental (clima Open-Meteo + distancia a agua manual). */
 export function EnvironmentStepScreen() {
@@ -96,7 +96,7 @@ export function EnvironmentStepScreen() {
           />
 
           <AppText variant="subtitle" style={styles.section}>
-            Variables
+            Variables de Control
           </AppText>
           <View style={styles.lista}>
             {evaluacion.variables.map((v) => (
@@ -105,15 +105,25 @@ export function EnvironmentStepScreen() {
           </View>
 
           <AppText variant="subtitle" style={styles.section}>
-            Ventana sugerida (72 h)
+            Ventana Sugerida (72 h)
           </AppText>
-          <Card style={styles.ventana}>
+          <Card
+            style={[
+              styles.ventana,
+              evaluacion.ventanaSugerida ? styles.ventanaOk : styles.ventanaError,
+            ]}
+            elevation="none"
+          >
             <Ionicons
-              name={evaluacion.ventanaSugerida ? 'time' : 'close-circle'}
+              name={evaluacion.ventanaSugerida ? 'time-sharp' : 'close-circle-sharp'}
               size={22}
               color={evaluacion.ventanaSugerida ? colors.brand.primary : colors.danger}
             />
-            <AppText variant="body">
+            <AppText
+              variant="body"
+              color={evaluacion.ventanaSugerida ? colors.brand.primary : colors.danger}
+              style={styles.ventanaText}
+            >
               {evaluacion.ventanaSugerida
                 ? `Próximo bloque apto: ${formatHora(evaluacion.ventanaSugerida.iso)}`
                 : 'No hay bloques con condiciones aptas en las próximas 72 h.'}
@@ -127,27 +137,50 @@ export function EnvironmentStepScreen() {
   );
 }
 
+const ICONS: Record<VariableAmbientalEvaluada['clave'], keyof typeof Ionicons.glyphMap> = {
+  viento: 'flag-outline',
+  precipitacion: 'rainy-outline',
+  distancia_agua: 'water-outline',
+  temperatura: 'thermometer-outline',
+  humedad: 'cloudy-outline',
+  punto_rocio: 'analytics-outline',
+};
+
 function VariableRow({ v }: { v: VariableAmbientalEvaluada }) {
+  const icon = ICONS[v.clave] || 'help-circle-outline';
+  const c = semaforoColores[v.estado];
+
   return (
-    <Card style={styles.varRow}>
-      <View style={styles.varText}>
-        <AppText variant="bodyStrong">{ETIQUETAS[v.clave]}</AppText>
-        <AppText variant="caption" color={colors.textSecondary}>
+    <Card style={styles.varBox} elevation="sm">
+      <View style={styles.varHeader}>
+        <View style={styles.varIconWrap}>
+          <Ionicons name={icon} size={18} color={colors.brand.primary} />
+        </View>
+        <View style={[styles.miniBadge, { backgroundColor: c.fill }]}>
+          <AppText variant="caption" color={c.text} style={styles.miniBadgeText}>
+            {semaforoLabel[v.estado]}
+          </AppText>
+        </View>
+      </View>
+      <View style={styles.varContent}>
+        <AppText variant="caption" color={colors.textSecondary} style={styles.varLabel} numberOfLines={1}>
+          {ETIQUETAS[v.clave]}
+        </AppText>
+        <AppText variant="bodyStrong" style={styles.varValue}>
           {formatValor(v)}
         </AppText>
       </View>
-      <SemaphoreBadge estado={v.estado} />
     </Card>
   );
 }
 
 const ETIQUETAS: Record<VariableAmbientalEvaluada['clave'], string> = {
   viento: 'Viento',
-  precipitacion: 'Prob. precipitación',
+  precipitacion: 'Precipitación',
   distancia_agua: 'Distancia a agua',
   temperatura: 'Temperatura',
-  humedad: 'Humedad relativa',
-  punto_rocio: 'Margen punto de rocío',
+  humedad: 'Humedad rel.',
+  punto_rocio: 'Punto de rocío',
 };
 
 function formatValor(v: VariableAmbientalEvaluada): string {
@@ -169,10 +202,73 @@ function formatHora(iso: string): string {
 
 const styles = StyleSheet.create({
   banner: { marginBottom: spacing.sm },
-  heroWrap: { alignItems: 'flex-start', marginVertical: spacing.md },
-  section: { marginTop: spacing.lg, marginBottom: spacing.sm },
-  lista: { gap: spacing.sm },
-  varRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  varText: { gap: 2 },
-  ventana: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, borderRadius: radius.md },
+  heroWrap: { alignItems: 'stretch', marginVertical: spacing.md },
+  section: { marginTop: spacing.lg, marginBottom: spacing.sm, fontWeight: '600' },
+  lista: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    gap: spacing.sm,
+  },
+  varBox: {
+    width: '48%',
+    padding: spacing.sm + 4,
+    backgroundColor: colors.surface,
+    gap: spacing.sm,
+  },
+  varHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  varIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    backgroundColor: colors.surfaceAlt,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  miniBadge: {
+    paddingHorizontal: spacing.sm - 2,
+    paddingVertical: 2,
+    borderRadius: radius.pill,
+  },
+  miniBadgeText: {
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  varContent: {
+    gap: 2,
+  },
+  varLabel: {
+    fontSize: 12,
+  },
+  varValue: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  ventana: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 1,
+  },
+  ventanaOk: {
+    backgroundColor: 'rgba(27, 107, 58, 0.05)',
+    borderColor: 'rgba(27, 107, 58, 0.15)',
+  },
+  ventanaError: {
+    backgroundColor: 'rgba(198, 40, 40, 0.05)',
+    borderColor: 'rgba(198, 40, 40, 0.15)',
+  },
+  ventanaText: {
+    flex: 1,
+    fontWeight: '600',
+    fontSize: 14,
+    lineHeight: 18,
+  },
 });

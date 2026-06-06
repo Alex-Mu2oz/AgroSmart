@@ -73,92 +73,160 @@ export function DataStepScreen() {
     <Screen footer={<Button label="Calcular mezcla" icon="arrow-forward" disabled={!puedeAvanzar} onPress={continuar} />}>
       <StepHeader paso={1} total={5} titulo="Datos del lote y producto" />
 
-      <View style={styles.fields}>
-        <NumberField
-          label="Área del lote"
-          value={areaLoteHa}
-          onChange={setArea}
-          unit="ha"
-          step={0.5}
-          min={0}
-          help="Lote piloto: 8 ha"
-        />
+      <Card style={styles.formCard} elevation="sm">
+        <View style={styles.fields}>
+          <NumberField
+            label="Área del cultivo"
+            value={areaLoteHa}
+            onChange={setArea}
+            unit="ha"
+            step={0.5}
+            min={0}
+            help="Lote piloto: 8 ha"
+          />
 
-        <View style={styles.group}>
-          <AppText variant="label" color={colors.textSecondary}>
-            Producto principal
-          </AppText>
-          <View style={styles.chips}>
-            {productos.map((p) => {
-              const sel = p.id === productoId;
-              return (
-                <Pressable
-                  key={p.id}
-                  onPress={() => {
-                    setProductoId(p.id);
-                    setDosis(p.dosisRecomendada);
-                    if (p.concentracionMaxMlL) setCObj(p.concentracionMaxMlL);
-                  }}
-                  accessibilityRole="button"
-                  accessibilityState={{ selected: sel }}
-                  style={[styles.chip, sel && styles.chipSel]}
-                >
-                  <AppText variant="label" color={sel ? colors.textOnBrand : colors.textPrimary}>
-                    {p.nombre}
-                  </AppText>
-                </Pressable>
-              );
-            })}
+          <View style={styles.group}>
+            <AppText variant="label" color={colors.textSecondary} style={styles.labelStyle}>
+              Producto principal
+            </AppText>
+            <View style={styles.chips}>
+              {productos.map((p) => {
+                const sel = p.id === productoId;
+                return (
+                  <Pressable
+                    key={p.id}
+                    onPress={() => {
+                      setProductoId(p.id);
+                      setDosis(p.dosisRecomendada);
+                      if (p.concentracionMaxMlL) setCObj(p.concentracionMaxMlL);
+                    }}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: sel }}
+                    style={({ pressed }) => [
+                      styles.chip,
+                      sel && styles.chipSel,
+                      pressed && styles.pressedChip,
+                    ]}
+                  >
+                    <AppText
+                      variant="label"
+                      color={sel ? colors.textOnBrand : colors.textPrimary}
+                      style={styles.chipText}
+                    >
+                      {p.nombre}
+                    </AppText>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
+
+          <NumberField label="Dosis planeada" value={dosis} onChange={setDosis} unit="L/ha" step={0.05} min={0} />
+          
+          <NumberField
+            label="Concentración objetivo"
+            value={cObj}
+            onChange={setCObj}
+            unit="ml/L"
+            step={1}
+            min={0}
+            help="Máx. etiqueta AGROTIN: 10 ml/L"
+          />
+
+          <View style={styles.tanque}>
+            <Ionicons name="water-sharp" size={18} color={colors.brand.primary} />
+            <AppText variant="label" color={colors.brand.primary} style={styles.tanqueText}>
+              Capacidad del tanque: {capacidadTanqueL} L (DJI Agras T40)
+            </AppText>
           </View>
         </View>
-
-        <NumberField label="Dosis planeada" value={dosis} onChange={setDosis} unit="L/ha" step={0.05} min={0} />
-        <NumberField
-          label="Concentración objetivo"
-          value={cObj}
-          onChange={setCObj}
-          unit="ml/L"
-          step={1}
-          min={0}
-          help="Máx. etiqueta AGROTIN: 10 ml/L"
-        />
-
-        <Card tone="alt" style={styles.tanque}>
-          <Ionicons name="water" size={20} color={colors.brand.primary} />
-          <AppText variant="label" color={colors.textSecondary}>
-            Tanque: {capacidadTanqueL} L (DJI Agras T40)
-          </AppText>
-        </Card>
-      </View>
+      </Card>
 
       {tocado && validacion && !validacion.ok ? (
-        <View style={styles.errores}>
-          {validacion.errores.map((e) => (
-            <AppText key={e.campo} variant="caption" color={colors.danger}>
-              • {e.mensaje}
+        <Card style={styles.erroresBox} elevation="none">
+          <Ionicons name="warning-outline" size={18} color={colors.danger} style={styles.errorIcon} />
+          <View style={styles.flex}>
+            <AppText variant="bodyStrong" color={colors.danger}>
+              Errores de validación:
             </AppText>
-          ))}
-        </View>
+            {validacion.errores.map((e) => (
+              <AppText key={e.campo} variant="caption" color={colors.danger} style={styles.errorText}>
+                • {e.mensaje}
+              </AppText>
+            ))}
+          </View>
+        </Card>
       ) : null}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  fields: { gap: spacing.lg },
-  group: { gap: spacing.sm },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  formCard: {
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+  },
+  fields: { gap: spacing.md },
+  group: { gap: spacing.xs },
+  labelStyle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
   chip: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    borderRadius: radius.pill,
-    borderWidth: 1.5,
+    paddingVertical: spacing.sm - 2,
+    borderRadius: radius.md,
+    borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.surface,
-    minHeight: 44,
+    backgroundColor: colors.surfaceAlt,
+    minHeight: 40,
     justifyContent: 'center',
   },
-  chipSel: { backgroundColor: colors.brand.primary, borderColor: colors.brand.primary },
-  tanque: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  errores: { marginTop: spacing.md, gap: spacing.xs },
+  chipSel: {
+    backgroundColor: colors.brand.primary,
+    borderColor: colors.brand.primary,
+  },
+  chipText: {
+    fontWeight: '600',
+  },
+  pressedChip: {
+    opacity: 0.85,
+    transform: [{ scale: 0.98 }],
+  },
+  tanque: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: 'rgba(27, 107, 58, 0.05)',
+    borderColor: 'rgba(27, 107, 58, 0.15)',
+    borderWidth: 1,
+    borderRadius: radius.md,
+    padding: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  tanqueText: {
+    fontWeight: '600',
+    fontSize: 13,
+  },
+  erroresBox: {
+    marginTop: spacing.md,
+    padding: spacing.md,
+    backgroundColor: 'rgba(198, 40, 40, 0.05)',
+    borderColor: 'rgba(198, 40, 40, 0.15)',
+    borderWidth: 1,
+    borderRadius: radius.md,
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'flex-start',
+  },
+  errorIcon: {
+    marginTop: 2,
+  },
+  errorText: {
+    lineHeight: 16,
+    marginTop: 2,
+  },
+  flex: { flex: 1 },
 });

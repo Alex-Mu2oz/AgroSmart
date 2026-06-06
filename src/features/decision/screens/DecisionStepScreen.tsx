@@ -10,27 +10,35 @@ import { useProfileStore } from '@stores/useProfileStore';
 import { useSettingsStore } from '@stores/useSettingsStore';
 import { useSessionDraftStore } from '@stores/useSessionDraftStore';
 import { RedOverrideDialog } from '@features/decision/components/RedOverrideDialog';
+import { Ionicons } from '@expo/vector-icons';
 import {
   AppText,
   BigChoiceButton,
+  Button,
   Card,
   ErrorState,
   Screen,
   SemaphoreBadge,
   StepHeader,
 } from '@shared/ui/components';
-import { colors, semaforoColores, semaforoLabel, spacing } from '@shared/ui/theme';
+import { colors, radius, semaforoColores, semaforoLabel, spacing } from '@shared/ui/theme';
 
 /** M5 — Panel de decisión, override y registro en bitácora. */
 export function DecisionStepScreen() {
   const router = useRouter();
   const rol = useProfileStore((s) => s.rol);
+  const clear = useProfileStore((s) => s.clear);
   const coords = useSettingsStore((s) => s.loteCoords);
   const draft = useSessionDraftStore();
   const reset = useSessionDraftStore((s) => s.reset);
 
   const [overrideVisible, setOverrideVisible] = useState(false);
   const [guardando, setGuardando] = useState(false);
+
+  const cambiarPerfil = () => {
+    clear();
+    router.replace('/select-profile');
+  };
 
   const panel: PanelPrefumigacion | null = useMemo(() => {
     if (!draft.validacion || !draft.ambiental || !draft.mezcla) return null;
@@ -71,6 +79,24 @@ export function DecisionStepScreen() {
     }
   };
 
+  const descartarYSalir = () => {
+    Alert.alert(
+      '¿Descartar sesión?',
+      'Se borrarán todos los datos ingresados en esta sesión y volverás al inicio sin registrar ningún historial.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Descartar y salir',
+          style: 'destructive',
+          onPress: () => {
+            reset();
+            router.replace('/(tabs)');
+          },
+        },
+      ]
+    );
+  };
+
   const aplicar = () => persistir({ accion: 'aplicar' });
   const postergar = () => persistir({ accion: 'postergar' });
   const confirmarOverride = (motivo: string) => {
@@ -91,20 +117,35 @@ export function DecisionStepScreen() {
       </View>
 
       {alertas.length > 0 ? (
-        <Card style={styles.alertas}>
-          <AppText variant="bodyStrong">Alertas activas</AppText>
-          {alertas.map((a, i) => (
-            <View key={`${a.codigo}-${i}`} style={styles.alertaItem}>
-              <View style={[styles.dot, { backgroundColor: semaforoColores[a.severidad].fill }]} />
-              <AppText variant="body" color={colors.textSecondary} style={styles.flex}>
-                {a.mensaje}
-              </AppText>
-            </View>
-          ))}
+        <Card style={styles.alertas} elevation="sm">
+          <View style={styles.alertasHeader}>
+            <Ionicons name="warning-outline" size={18} color={colors.danger} />
+            <AppText variant="bodyStrong" color={colors.danger} style={styles.alertasTitle}>
+              Alertas Activas Detectadas ({alertas.length})
+            </AppText>
+          </View>
+          <View style={styles.alertasList}>
+            {alertas.map((a, i) => (
+              <View key={`${a.codigo}-${i}`} style={styles.alertaItem}>
+                <View style={[styles.dot, { backgroundColor: semaforoColores[a.severidad].fill }]} />
+                <AppText variant="body" color={colors.textSecondary} style={styles.flex}>
+                  {a.mensaje}
+                </AppText>
+              </View>
+            ))}
+          </View>
         </Card>
       ) : (
-        <Card>
-          <AppText variant="body">Sin alertas. Condiciones aptas para fumigar.</AppText>
+        <Card style={styles.okCard} elevation="none">
+          <View style={styles.okHeader}>
+            <Ionicons name="checkmark-circle-outline" size={24} color={colors.brand.primary} />
+            <AppText variant="bodyStrong" color={colors.brand.primary} style={styles.okTitle}>
+              Sin alertas de riesgo
+            </AppText>
+          </View>
+          <AppText variant="body" color={colors.textSecondary} style={styles.okText}>
+            Todas las variables técnicas y ambientales se encuentran en rangos óptimos y seguros.
+          </AppText>
         </Card>
       )}
 
@@ -142,10 +183,20 @@ export function DecisionStepScreen() {
               onPress={() => setOverrideVisible(true)}
             />
           ) : (
-            <Card style={styles.bloqueo}>
-              <AppText variant="body" color={colors.danger}>
-                Solo el operador del dron puede hacer override de una alerta {semaforoLabel.rojo}.
-              </AppText>
+            <Card style={styles.bloqueo} elevation="none">
+              <View style={styles.bloqueoHead}>
+                <Ionicons name="lock-closed" size={18} color={colors.danger} />
+                <AppText variant="body" color={colors.danger} style={styles.bloqueoText}>
+                  Solo el operador del dron puede hacer override de una alerta {semaforoLabel.rojo}.
+                </AppText>
+              </View>
+              <Button
+                label="Cambiar de perfil"
+                variant="outlined"
+                icon="swap-horizontal"
+                onPress={cambiarPerfil}
+                style={styles.bloqueoBtn}
+              />
             </Card>
           )
         ) : null}
@@ -157,6 +208,24 @@ export function DecisionStepScreen() {
           tone="neutral"
           disabled={guardando}
           onPress={postergar}
+        />
+
+        <BigChoiceButton
+          label="Corregir datos de sesión"
+          description="Volver al paso 1 para ajustar variables"
+          icon="create-outline"
+          tone="neutral"
+          disabled={guardando}
+          onPress={() => router.replace('/session/step-data')}
+        />
+
+        <BigChoiceButton
+          label="Descartar y salir"
+          description="Borrar borrador y volver al inicio"
+          icon="trash-outline"
+          tone="neutral"
+          disabled={guardando}
+          onPress={descartarYSalir}
         />
       </View>
 
@@ -187,11 +256,68 @@ function resumenDecision(tipo: string): string {
 }
 
 const styles = StyleSheet.create({
-  heroWrap: { alignItems: 'flex-start', marginBottom: spacing.md },
-  alertas: { gap: spacing.sm },
+  heroWrap: { alignItems: 'stretch', marginBottom: spacing.md },
+  alertas: {
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+  },
+  alertasHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  alertasTitle: {
+    fontSize: 15,
+  },
+  alertasList: {
+    gap: spacing.sm,
+    marginTop: spacing.xs,
+  },
   alertaItem: { flexDirection: 'row', alignItems: 'flex-start', gap: spacing.sm },
-  dot: { width: 10, height: 10, borderRadius: 5, marginTop: 6 },
-  flex: { flex: 1 },
+  dot: { width: 8, height: 8, borderRadius: 4, marginTop: 7 },
+  flex: { flex: 1, lineHeight: 20 },
+  okCard: {
+    padding: spacing.md,
+    backgroundColor: 'rgba(27, 107, 58, 0.05)',
+    borderColor: 'rgba(27, 107, 58, 0.15)',
+    borderWidth: 1,
+    borderRadius: radius.md,
+  },
+  okHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  okTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  okText: {
+    lineHeight: 20,
+  },
   acciones: { marginTop: spacing.lg, gap: spacing.md },
-  bloqueo: { borderColor: colors.danger, borderWidth: 1 },
+  bloqueo: {
+    borderColor: 'rgba(198, 40, 40, 0.2)',
+    borderWidth: 1,
+    backgroundColor: 'rgba(198, 40, 40, 0.05)',
+    padding: spacing.md,
+    borderRadius: radius.md,
+    gap: spacing.sm,
+  },
+  bloqueoHead: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.sm,
+  },
+  bloqueoText: {
+    flex: 1,
+    lineHeight: 20,
+    fontWeight: '600',
+  },
+  bloqueoBtn: {
+    marginTop: spacing.xs,
+    alignSelf: 'stretch',
+  },
 });

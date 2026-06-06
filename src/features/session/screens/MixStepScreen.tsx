@@ -65,40 +65,83 @@ export function MixStepScreen() {
     >
       <StepHeader paso={2} total={5} titulo="Mezcla calculada" />
 
-      <Card style={styles.resumen}>
-        <Fila etiqueta="Volumen de agua" valor={`${fmt(mezcla.volumenAguaL)} L`} />
-        <Fila etiqueta="Volumen total de mezcla" valor={`${fmt(mezcla.volumenTotalL)} L`} destacado />
-        <Fila etiqueta="Carga química" valor={`${fmt(mezcla.cargaQuimicaPct)} %`} />
+      {/* Grid de resumen en 3 columnas estilo Dashboard */}
+      <Card style={styles.resumen} elevation="sm" padded={false}>
+        <View style={styles.resumenGrid}>
+          <View style={styles.resumenCol}>
+            <AppText variant="caption" color={colors.textSecondary} center style={styles.resumenLabel}>
+              Agua
+            </AppText>
+            <AppText variant="subtitle" color={colors.brand.primary} center style={styles.resumenVal}>
+              {fmt(mezcla.volumenAguaL)} L
+            </AppText>
+          </View>
+          
+          <View style={styles.divider} />
+          
+          <View style={styles.resumenCol}>
+            <AppText variant="caption" color={colors.textSecondary} center style={styles.resumenLabel}>
+              Mezcla Total
+            </AppText>
+            <AppText variant="subtitle" color={colors.brand.primary} center style={styles.resumenVal}>
+              {fmt(mezcla.volumenTotalL)} L
+            </AppText>
+          </View>
+          
+          <View style={styles.divider} />
+          
+          <View style={styles.resumenCol}>
+            <AppText variant="caption" color={colors.textSecondary} center style={styles.resumenLabel}>
+              Carga Química
+            </AppText>
+            <AppText variant="subtitle" color={colors.brand.primary} center style={styles.resumenVal}>
+              {fmt(mezcla.cargaQuimicaPct)} %
+            </AppText>
+          </View>
+        </View>
       </Card>
 
       <AppText variant="subtitle" style={styles.section}>
-        Por producto
+        Detalle de Ingredientes
       </AppText>
       <View style={styles.lista}>
         {mezcla.porProducto.map((p) => (
-          <Card key={p.productoId} style={styles.prod}>
-            <AppText variant="bodyStrong">{nombre(p.productoId)}</AppText>
+          <Card key={p.productoId} style={styles.prod} elevation="sm">
+            <AppText variant="bodyStrong" style={styles.prodName}>{nombre(p.productoId)}</AppText>
+            <View style={styles.prodDivider} />
             <Fila etiqueta="Dosis total" valor={`${fmt(p.dosisTotalL)} L`} />
-            <Fila etiqueta="Concentración" valor={`${fmt(p.concentracionResultanteMlL)} ml/L`} />
+            <Fila etiqueta="Concentración en tanque" valor={`${fmt(p.concentracionResultanteMlL)} ml/L`} />
           </Card>
         ))}
       </View>
 
       <AppText variant="subtitle" style={styles.section}>
-        Orden de adición (W-A-L-E-S)
+        Orden de Adición (W-A-L-E-S)
       </AppText>
-      <View style={styles.orden}>
-        {mezcla.ordenAdicion.map((id, i) => (
-          <View key={id} style={styles.paso}>
-            <View style={styles.num}>
-              <AppText variant="label" color={colors.textOnBrand}>
-                {i + 1}
-              </AppText>
+      <Card style={styles.timelineCard} elevation="sm">
+        <View style={styles.ordenTimeline}>
+          {mezcla.ordenAdicion.map((id, i) => (
+            <View key={id} style={styles.timelineItem}>
+              <View style={styles.timelineIndicator}>
+                <View style={styles.timelineCircle}>
+                  <AppText variant="caption" color={colors.textOnBrand} style={styles.timelineNum}>
+                    {i + 1}
+                  </AppText>
+                </View>
+                {i < mezcla.ordenAdicion.length - 1 && <View style={styles.timelineLine} />}
+              </View>
+              <View style={styles.timelineContent}>
+                <AppText variant="bodyStrong" style={styles.timelineTitle}>
+                  {nombre(id)}
+                </AppText>
+                <AppText variant="caption" color={colors.textSecondary}>
+                  Paso {i + 1} en el orden de dilución
+                </AppText>
+              </View>
             </View>
-            <AppText variant="body">{nombre(id)}</AppText>
-          </View>
-        ))}
-      </View>
+          ))}
+        </View>
+      </Card>
     </Screen>
   );
 }
@@ -106,10 +149,10 @@ export function MixStepScreen() {
 function Fila({ etiqueta, valor, destacado }: { etiqueta: string; valor: string; destacado?: boolean }) {
   return (
     <View style={styles.fila}>
-      <AppText variant="body" color={colors.textSecondary}>
+      <AppText variant="body" color={colors.textSecondary} style={styles.filaLabel}>
         {etiqueta}
       </AppText>
-      <AppText variant={destacado ? 'subtitle' : 'bodyStrong'} color={destacado ? colors.brand.primary : colors.textPrimary}>
+      <AppText variant={destacado ? 'subtitle' : 'bodyStrong'} color={destacado ? colors.brand.primary : colors.textPrimary} style={styles.filaVal}>
         {valor}
       </AppText>
     </View>
@@ -126,19 +169,107 @@ function mensajeError(tipo: string): string {
 }
 
 const styles = StyleSheet.create({
-  resumen: { gap: spacing.sm },
-  section: { marginTop: spacing.lg, marginBottom: spacing.sm },
+  resumen: {
+    backgroundColor: colors.surface,
+  },
+  resumenGrid: {
+    flexDirection: 'row',
+    paddingVertical: spacing.md,
+  },
+  resumenCol: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  resumenLabel: {
+    fontSize: 11,
+    marginBottom: 4,
+    fontWeight: '600',
+  },
+  resumenVal: {
+    fontWeight: '700',
+    fontSize: 18,
+  },
+  divider: {
+    width: 1,
+    backgroundColor: colors.border,
+    height: '80%',
+    alignSelf: 'center',
+  },
+  section: { marginTop: spacing.lg, marginBottom: spacing.sm, fontWeight: '600' },
   lista: { gap: spacing.sm },
-  prod: { gap: spacing.xs },
-  fila: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  orden: { gap: spacing.sm },
-  paso: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  num: {
+  prod: {
+    gap: spacing.xs,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+  },
+  prodName: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  prodDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: 4,
+  },
+  fila: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 2,
+  },
+  filaLabel: {
+    fontSize: 13,
+  },
+  filaVal: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  timelineCard: {
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+  },
+  ordenTimeline: {
+    gap: 0,
+  },
+  timelineItem: {
+    flexDirection: 'row',
+    minHeight: 56,
+  },
+  timelineIndicator: {
+    alignItems: 'center',
     width: 28,
-    height: 28,
-    borderRadius: radius.pill,
+  },
+  timelineCircle: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: colors.brand.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 2,
+  },
+  timelineNum: {
+    fontWeight: '700',
+    fontSize: 11,
+  },
+  timelineLine: {
+    width: 2,
+    backgroundColor: colors.brand.primary,
+    flex: 1,
+    marginTop: -2,
+    marginBottom: -6,
+    zIndex: 1,
+    opacity: 0.3,
+  },
+  timelineContent: {
+    flex: 1,
+    marginLeft: spacing.sm,
+    paddingBottom: spacing.md,
+    justifyContent: 'center',
+  },
+  timelineTitle: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });

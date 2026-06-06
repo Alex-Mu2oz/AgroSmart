@@ -1,6 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { evaluarTecnica } from '@core/calc/evaluarTecnica';
 import { useProducts } from '@features/products/hooks/useProducts';
 import { useSessionDraftStore } from '@stores/useSessionDraftStore';
@@ -37,16 +38,35 @@ export function TechnicalStepScreen() {
       </View>
 
       {validacion.alertas.length === 0 ? (
-        <Card style={styles.ok}>
-          <AppText variant="body">
-            La mezcla cumple los umbrales técnicos de etiqueta y carga química.
+        <Card style={styles.ok} elevation="none">
+          <View style={styles.okHeader}>
+            <Ionicons name="checkmark-circle-outline" size={24} color={colors.brand.primary} />
+            <AppText variant="bodyStrong" color={colors.brand.primary} style={styles.okTitle}>
+              Mezcla validada con éxito
+            </AppText>
+          </View>
+          <AppText variant="body" color={colors.textSecondary} style={styles.okText}>
+            La mezcla cumple con todos los umbrales técnicos de etiqueta y carga química requeridos.
           </AppText>
         </Card>
       ) : (
         <View style={styles.lista}>
           {validacion.alertas.map((a, i) => (
-            <Card key={`${a.codigo}-${i}`} style={[styles.alerta, { borderLeftColor: semaforoColores[a.severidad].fill }]}>
-              <SemaphoreBadge estado={a.severidad} />
+            <Card
+              key={`${a.codigo}-${i}`}
+              style={[styles.alerta, { borderLeftColor: semaforoColores[a.severidad].fill }]}
+              elevation="sm"
+            >
+              <View style={styles.alertaHeader}>
+                <Ionicons
+                  name={a.severidad === 'rojo' ? 'alert-circle' : 'warning'}
+                  size={16}
+                  color={semaforoColores[a.severidad].fill}
+                />
+                <AppText variant="caption" color={semaforoColores[a.severidad].fill} style={styles.alertaBadgeText}>
+                  {a.severidad === 'rojo' ? 'ALTO RIESGO' : 'PRECAUCIÓN'}
+                </AppText>
+              </View>
               <AppText variant="body" style={styles.alertaMsg}>
                 {a.mensaje}
               </AppText>
@@ -59,9 +79,47 @@ export function TechnicalStepScreen() {
 }
 
 const styles = StyleSheet.create({
-  heroWrap: { alignItems: 'flex-start', marginBottom: spacing.lg },
-  ok: {},
+  heroWrap: { alignItems: 'stretch', marginBottom: spacing.lg },
+  ok: {
+    padding: spacing.md,
+    backgroundColor: 'rgba(27, 107, 58, 0.05)',
+    borderColor: 'rgba(27, 107, 58, 0.15)',
+    borderWidth: 1,
+    borderRadius: radius.md,
+  },
+  okHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.xs,
+  },
+  okTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  okText: {
+    lineHeight: 20,
+  },
   lista: { gap: spacing.sm },
-  alerta: { borderLeftWidth: 4, borderRadius: radius.md, gap: spacing.sm },
-  alertaMsg: { color: colors.textPrimary },
+  alerta: {
+    borderLeftWidth: 4,
+    borderRadius: radius.md,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    gap: spacing.xs,
+  },
+  alertaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+  },
+  alertaBadgeText: {
+    fontWeight: '700',
+    fontSize: 11,
+    letterSpacing: 0.5,
+  },
+  alertaMsg: {
+    color: colors.textPrimary,
+    lineHeight: 20,
+  },
 });

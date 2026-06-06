@@ -32,13 +32,15 @@ export function BrandHeader({ title, subtitle, right, showLogo = true }: BrandHe
           </View>
         ) : null}
         <View style={styles.texts}>
-          <AppText variant="title" color={colors.textInverse}>
+          <AppText variant="title" color={colors.textInverse} style={styles.titleText}>
             {title}
           </AppText>
           {subtitle ? (
-            <AppText variant="caption" color="rgba(255,255,255,0.85)">
-              {subtitle}
-            </AppText>
+            <View style={styles.subtitleBadge}>
+              <AppText variant="caption" color={colors.textInverse} style={styles.subtitleText}>
+                {subtitle}
+              </AppText>
+            </View>
           ) : null}
         </View>
         {right ? <View>{right}</View> : null}
@@ -51,21 +53,36 @@ const styles = StyleSheet.create({
   band: {
     backgroundColor: colors.brand.primary,
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
+    paddingBottom: spacing.lg + 4,
     borderBottomLeftRadius: radius.lg,
     borderBottomRightRadius: radius.lg,
     ...shadows.md,
   },
   row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   logoWrap: {
-    width: 52,
-    height: 52,
+    width: 50,
+    height: 50,
     borderRadius: radius.md,
     backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     ...shadows.sm,
   },
-  logo: { width: 44, height: 44 },
+  logo: { width: 40, height: 40 },
   texts: { flex: 1, gap: 2 },
+  titleText: {
+    fontWeight: '700',
+  },
+  subtitleBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(255, 255, 255, 0.16)',
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    marginTop: 2,
+  },
+  subtitleText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
 });
